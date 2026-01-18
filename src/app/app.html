@@ -1,23 +1,49 @@
-<div class="main-container">
-  <div id="map"></div>
-
-  <div class="panel" [class.danger]="distanceToTarget() > 500" [class.safe]="distanceToTarget() <= 500">
-    @if (nextTarget()) {
-      <div class="header">
-        <span class="station">{{ nextTarget().Station }}</span>
-        <span class="event">{{ nextTarget().Event }}</span>
+<div class="app-wrapper">
+  @if (!trackingStarted()) {
+    <div class="start-overlay">
+      <div class="start-card">
+        <div class="logo-circle">
+          <span class="icon">🛰️</span>
+        </div>
+        <h1>LOCO<span>NAV</span></h1>
+        <p>Advanced Railway Tracking System</p>
+        <button (click)="startNavigation()">LAUNCH SYSTEM</button>
       </div>
+    </div>
+  }
 
-      <div class="distance-display">
-        <span class="meters">{{ distanceToTarget() | number:'1.0-0' }}</span>
-        <span class="unit">METERS</span>
-      </div>
+  <div id="map" class="map-bg"></div>
 
-      <div class="guidance-bar">
-        {{ statusMessage() }}
-      </div>
-    } @else {
-      <div class="loader">Locating nearest signal...</div>
-    }
+  <div class="glass-hud" [class.alert]="distanceToTarget() > 500">
+    <div class="nav-main">
+      <span class="sub">CURRENT TARGET</span>
+      <h2 class="title">{{ nextTarget()?.Event || 'SCANNING...' }}</h2>
+      <div class="stn-tag">{{ nextTarget()?.Station }}</div>
+    </div>
+    <div class="dist-counter">
+      <span class="val">{{ distanceToTarget() | number:'1.0-0' }}</span>
+      <span class="unit">METERS</span>
+    </div>
+  </div>
+
+  <div class="side-panel">
+    <div class="scroll-content">
+      @for (point of railwayData; track point['Sr. No.']) {
+        <div class="node" [id]="'point-' + point['Sr. No.']" [class.active]="nextTarget()?.['Sr. No.'] === point['Sr. No.']">
+          <div class="visual">
+            <div class="dot"></div>
+            <div class="line"></div>
+          </div>
+          <div class="label">
+            <span class="stn">{{ point.Station }}</span>
+            <span class="evt">{{ point.Event }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="footer-msg">
+    <span class="pulse-dot"></span> GPS TRACKING ACTIVE // {{ railwayData.length }} POINTS LOADED
   </div>
 </div>

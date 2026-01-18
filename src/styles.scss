@@ -1,1 +1,50 @@
 /* You can add global styles to this file, and also import other style files */
+/* 1. Leaflet Map ki CSS (Iske bina map ke tiles bikhre hue dikhenge) */
+@import "leaflet/dist/leaflet.css";
+
+/* 2. Modern Google Font (Poppins) ko import karein */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
+
+/* 3. Browser ki default margin/padding hatayein taaki map full screen dikhe */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Scrollbar ko disable kiya taaki interface clean lage */
+  background-color: #0f172a; /* Navy blue base color */
+  font-family: 'Poppins', sans-serif;
+}
+
+/* 4. Leaflet Map ke liye kuch jaruri fix */
+.leaflet-container {
+  background: #0f172a !important; /* Map load hone se pehle background color */
+  outline: 0;
+}
+
+/* Leaflet Attribution (niche chota sa text) ko modern banayein */
+.leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.5) !important;
+  color: #888 !important;
+  font-size: 8px !important;
+}
+
+/* Zoom controls ko hide karne ke liye (kyuki humne custom HUD banaya hai) */
+.leaflet-control-zoom {
+  display: none !important;
+}
+
+/* 5. Scrollbar ko modern aur patla (thin) banayein (Mobile/Chrome ke liye) */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4f46e5;
+  border-radius: 10px;
+}
