@@ -5,5 +5,7 @@
 [build.environment]
   NODE_VERSION = "20"
 
-[[plugins]]
-  package = "@netlify/plugin-skip-runtime"
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
