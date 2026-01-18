@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build -- --configuration=production"
+  publish = "dist/fds/browser"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-skip-runtime"
