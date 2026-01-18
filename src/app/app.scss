@@ -1,0 +1,47 @@
+.main-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#map {
+  flex: 1;
+  width: 100%;
+}
+
+.panel {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  padding: 20px;
+  z-index: 1000;
+  color: white;
+  text-align: center;
+  border-radius: 25px 25px 0 0;
+  box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+  transition: all 0.5s ease;
+
+  &.danger { background: #c62828; } // Deep Red
+  &.safe { background: #2e7d32; }   // Deep Green
+
+  .header {
+    margin-bottom: 10px;
+    .station { font-size: 1.5rem; font-weight: 800; display: block; }
+    .event { font-size: 1.1rem; opacity: 0.9; }
+  }
+
+  .distance-display {
+    margin: 15px 0;
+    .meters { font-size: 5rem; font-weight: 900; line-height: 1; display: block; }
+    .unit { font-size: 1.2rem; letter-spacing: 2px; }
+  }
+
+  .guidance-bar {
+    margin-top: 15px;
+    background: rgba(0,0,0,0.2);
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+}

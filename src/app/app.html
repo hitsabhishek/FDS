@@ -1,0 +1,23 @@
+<div class="main-container">
+  <div id="map"></div>
+
+  <div class="panel" [class.danger]="distanceToTarget() > 500" [class.safe]="distanceToTarget() <= 500">
+    @if (nextTarget()) {
+      <div class="header">
+        <span class="station">{{ nextTarget().Station }}</span>
+        <span class="event">{{ nextTarget().Event }}</span>
+      </div>
+
+      <div class="distance-display">
+        <span class="meters">{{ distanceToTarget() | number:'1.0-0' }}</span>
+        <span class="unit">METERS</span>
+      </div>
+
+      <div class="guidance-bar">
+        {{ statusMessage() }}
+      </div>
+    } @else {
+      <div class="loader">Locating nearest signal...</div>
+    }
+  </div>
+</div>
