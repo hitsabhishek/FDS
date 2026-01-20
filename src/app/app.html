@@ -1,49 +1,55 @@
-<div class="app-wrapper">
+<div class="loco-container">
+  <button class="icon-btn mute" (click)="toggleMute()">
+    {{ isMuted() ? '🔇' : '🔊' }}
+  </button>
+
   @if (!trackingStarted()) {
-    <div class="start-overlay">
-      <div class="start-card">
-        <div class="logo-circle">
-          <span class="icon">🛰️</span>
-        </div>
+    <div class="launch-screen">
+      <div class="glass-card">
         <h1>LOCO<span>NAV</span></h1>
-        <p>Advanced Railway Tracking System</p>
-        <button (click)="startNavigation()">LAUNCH SYSTEM</button>
+        <div class="btn-grid">
+          @for (file of availableRoutes; track file) {
+            <button (click)="selectAndStart(file)"><i>🛤️</i> {{ file.toUpperCase() }}</button>
+          }
+        </div>
       </div>
     </div>
   }
 
-  <div id="map" class="map-bg"></div>
+  <div id="map" class="full-map"></div>
 
-  <div class="glass-hud" [class.alert]="distanceToTarget() > 500">
-    <div class="nav-main">
-      <span class="sub">CURRENT TARGET</span>
-      <h2 class="title">{{ nextTarget()?.Event || 'SCANNING...' }}</h2>
-      <div class="stn-tag">{{ nextTarget()?.Station }}</div>
+  <div class="speedometer">
+    <div class="val">{{ currentSpeed() | number:'1.0-0' }}</div>
+    <div class="lab">KM/H</div>
+  </div>
+
+  <div class="nav-hud" [class.danger]="distanceToTarget() > 300">
+    <div class="target-info">
+      <p>UPCOMING</p>
+      <h3>{{ nextTarget()?.Event || '...' }}</h3>
+      <span class="badge">{{ nextTarget()?.Station || '---' }}</span>
     </div>
-    <div class="dist-counter">
-      <span class="val">{{ distanceToTarget() | number:'1.0-0' }}</span>
-      <span class="unit">METERS</span>
+    <div class="target-dist">
+      <div class="km">{{ distanceToTarget() | number:'1.0-0' }}</div>
+      <div class="unit">METERS</div>
     </div>
   </div>
 
-  <div class="side-panel">
-    <div class="scroll-content">
-      @for (point of railwayData; track point['Sr. No.']) {
-        <div class="node" [id]="'point-' + point['Sr. No.']" [class.active]="nextTarget()?.['Sr. No.'] === point['Sr. No.']">
-          <div class="visual">
-            <div class="dot"></div>
-            <div class="line"></div>
-          </div>
-          <div class="label">
-            <span class="stn">{{ point.Station }}</span>
-            <span class="evt">{{ point.Event }}</span>
-          </div>
+  <div class="timeline">
+    @for (p of railwayData; track p['Sr. No.']; let i = $index) {
+      <div class="node" [id]="'point-' + p['Sr. No.']" 
+           [class.active]="i === currentIndex" 
+           [class.passed]="i < currentIndex" 
+           [class.upcoming]="i > currentIndex">
+        <div class="line-box">
+          <div class="dot">@if(i < currentIndex){✓}</div>
+          <div class="line"></div>
         </div>
-      }
-    </div>
-  </div>
-
-  <div class="footer-msg">
-    <span class="pulse-dot"></span> GPS TRACKING ACTIVE // {{ railwayData.length }} POINTS LOADED
+        <div class="text">
+          <b>{{ p.Station }}</b>
+          <small>{{ p.Event }}</small>
+        </div>
+      </div>
+    }
   </div>
 </div>
