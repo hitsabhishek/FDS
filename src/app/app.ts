@@ -20,90 +20,120 @@ L.Marker.prototype.options.icon = iconDefault;
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
- public railwayData: any[] = [];
+  public availableRoutes: string[] = ['csvjson.json', 'howrah_delhi.json', 'mumbai_adi.json'];
+  public railwayData: any[] = [];
+  
+  // Signals
   public nextTarget = signal<any>(null);
   public distanceToTarget = signal<number>(0);
-  public statusMessage = signal<string>('Ready to Start');
+  public currentSpeed = signal<number>(0);
+  public isMuted = signal<boolean>(false);
   public trackingStarted = signal<boolean>(false);
+  public statusMessage = signal<string>('Select Route');
 
   private map!: L.Map;
   private userMarker!: L.Marker;
+  public currentIndex = 0; // Public so template can use for Timeline
+  private proximityAnnounced = false;
+  private lastAnnouncedId: number | null = null;
 
-  async ngOnInit() {
-    try {
-      const res = await fetch('/csvjson.json');
-      this.railwayData = await res.json();
-      this.initMap();
-    } catch (e) {
-      this.statusMessage.set('JSON Data Missing!');
-    }
-  }
+  ngOnInit() { this.initMap(); }
 
   private initMap() {
-    // Default view: Dhanbad (Project Start)
-    this.map = L.map('map', { zoomControl: false }).setView([23.7927, 86.4265], 15);
+    this.map = L.map('map', { zoomControl: false }).setView([23.5, 80.0], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
   }
 
-  // User Gesture Function (Fixes Permission Error)
-  public startNavigation() {
-    this.trackingStarted.set(true);
-    this.statusMessage.set('Searching GPS...');
-    this.trackUser();
+  private speak(text: string) {
+    if (this.isMuted()) return;
+    window.speechSynthesis.cancel();
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.rate = 0.9;
+    window.speechSynthesis.speak(msg);
+  }
+
+  async selectAndStart(fileName: string) {
+    try {
+      const res = await fetch(fileName);
+      this.railwayData = await res.json();
+      this.currentIndex = 0;
+      this.trackingStarted.set(true);
+      
+      if (this.railwayData.length > 0) {
+        const start = this.railwayData[0];
+        this.map.flyTo([start["Converted Latitude (in degree decimal)"], start["Converted Longitude (in degree decimal)"]], 16);
+      }
+      this.trackUser();
+      this.speak("Route active. System ready.");
+    } catch (e) { this.statusMessage.set('File Error'); }
   }
 
   private trackUser() {
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition((pos) => {
-        const { latitude, longitude } = pos.coords;
+        const { latitude, longitude, speed } = pos.coords;
+        this.currentSpeed.set(speed ? speed * 3.6 : 0);
 
-        if (!this.userMarker) {
-          this.userMarker = L.marker([latitude, longitude]).addTo(this.map)
-            .bindPopup('Current Position').openPopup();
-        } else {
-          this.userMarker.setLatLng([latitude, longitude]);
-        }
-        this.map.panTo([latitude, longitude]);
+        if (!this.userMarker) this.userMarker = L.marker([latitude, longitude]).addTo(this.map);
+        else this.userMarker.setLatLng([latitude, longitude]);
+        
+        this.map.setView([latitude, longitude], 17); 
         this.processNavigation(latitude, longitude);
-      }, 
-      (err) => this.statusMessage.set('GPS Denied!'), 
-      { enableHighAccuracy: true });
+      }, null, { enableHighAccuracy: true });
     }
   }
 
   private processNavigation(uLat: number, uLng: number) {
-    let minD = Infinity;
-    let closest: any = null;
+    if (!this.railwayData.length) return;
 
-    this.railwayData.forEach(p => {
-      const d = this.calculateKM(uLat, uLng, 
-                p["Converted Latitude (in degree decimal)"], 
-                p["Converted Longitude (in degree decimal)"]);
-      if (d < minD) {
-        minD = d;
-        closest = p;
-      }
-    });
+    const target = this.railwayData[this.currentIndex];
+    const dist = this.calculateMeters(uLat, uLng, target["Converted Latitude (in degree decimal)"], target["Converted Longitude (in degree decimal)"]);
 
-    if (closest) {
-      const meters = minD * 1000;
-      this.nextTarget.set(closest);
-      this.distanceToTarget.set(meters);
-      this.statusMessage.set(meters > 500 ? 'FOLLOW ROUTE' : 'APPROACHING SIGNAL');
+    // 1. Voice & Sequence Advance
+    if (dist <= 300 && dist > 60 && !this.proximityAnnounced) {
+      this.speak(`Next target ${target.Event} is 300 meters away`);
+      this.proximityAnnounced = true;
+    }
 
-      const element = document.getElementById('point-' + closest['Sr. No.']);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (dist <= 60 && this.lastAnnouncedId !== target['Sr. No.']) {
+      this.speak(`Arrived at ${target.Event}`);
+      this.lastAnnouncedId = target['Sr. No.'];
+      setTimeout(() => {
+        if (this.currentIndex < this.railwayData.length - 1) {
+          this.currentIndex++;
+          this.proximityAnnounced = false;
+        }
+      }, 3000);
+    }
+
+    // 2. Shunting/Reverse Reset (300m threshold)
+    if (dist > 300) {
+      let minD = Infinity;
+      let closestIdx = this.currentIndex;
+      this.railwayData.forEach((p, i) => {
+        const d = this.calculateMeters(uLat, uLng, p["Converted Latitude (in degree decimal)"], p["Converted Longitude (in degree decimal)"]);
+        if (d < minD) { minD = d; closestIdx = i; }
+      });
+      if(closestIdx !== this.currentIndex) {
+        this.currentIndex = closestIdx;
+        this.proximityAnnounced = false;
       }
     }
+
+    this.nextTarget.set(this.railwayData[this.currentIndex]);
+    this.distanceToTarget.set(dist);
+    
+    const el = document.getElementById('point-' + this.nextTarget()['Sr. No.']);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  private calculateKM(lat1: number, lon1: number, lat2: number, lon2: number) {
+  private calculateMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))) * 1000;
   }
+
+  toggleMute() { this.isMuted.set(!this.isMuted()); }
 }
