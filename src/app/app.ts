@@ -20,7 +20,7 @@ L.Marker.prototype.options.icon = iconDefault;
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
-  public availableRoutes: string[] = ['csvjson.json', 'howrah_delhi.json', 'mumbai_adi.json'];
+  public availableRoutes: string[] = ['DHN-DDU.json'];
   public railwayData: any[] = [];
   
   public nextTarget = signal<any>(null);
