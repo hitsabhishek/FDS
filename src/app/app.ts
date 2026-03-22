@@ -1,5 +1,5 @@
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -8,9 +8,10 @@ import { Component, signal } from '@angular/core';
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App {
+export class App implements OnInit, OnDestroy {
   public availableRoutes: string[] = Array.from({ length: 32 }, (_, i) => `ROUTE${i + 1}.json`);
   public railwayData: any[] = [];
+  public currentTime = signal<string>('');
 
   public activeTarget = signal<any>(null);
   public lastPassed = signal<any>(null);
@@ -18,37 +19,54 @@ export class App {
   public currentSpeed = signal<number>(0);
   public gpsAccuracy = signal<number>(0);
   public isMuted = signal<boolean>(false);
-
   public trackingStarted = signal<boolean>(false);
   public isSidebarOpen = signal<boolean>(false);
 
   public currentIndex = 0;
   private watchId: number | null = null;
+  private clockInterval: any;
   private synth = window.speechSynthesis;
+
+  ngOnInit() {
+    this.updateTime();
+    this.clockInterval = setInterval(() => this.updateTime(), 1000);
+  }
+
+  ngOnDestroy() {
+    if (this.clockInterval) clearInterval(this.clockInterval);
+    this.stopNavigation();
+  }
+
+  private updateTime() {
+    const now = new Date();
+    this.currentTime.set(
+      now.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }),
+    );
+  }
 
   async selectAndStart(fileName: string) {
     try {
-      // 1. Pehle screen switch karo
+      this.isSidebarOpen.set(false); // Close sidebar if switching routes
       this.trackingStarted.set(true);
 
-      // 2. Data load hone ka wait karo (WAIT IS CRITICAL)
       const res = await fetch(`./routes/${fileName}`);
-      if (!res.ok) throw new Error('File not found');
-
+      if (!res.ok) throw new Error('File Error');
       this.railwayData = await res.json();
 
-      // 3. Default index set karo safe side ke liye
       this.currentIndex = 0;
       this.activeTarget.set(this.railwayData[0]);
 
-      // 4. Ab data mil gaya hai, toh Nearest Station dhundo
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
           let nearestIdx = 0;
           let minDistance = Infinity;
 
-          // Loop through all points in the JSON
           this.railwayData.forEach((point, index) => {
             const d = this.calculateMeters(latitude, longitude, point.latitude, point.longitude);
             if (d < minDistance) {
@@ -57,35 +75,22 @@ export class App {
             }
           });
 
-          // Jump directly to the nearest station
           this.currentIndex = nearestIdx;
           this.activeTarget.set(this.railwayData[this.currentIndex]);
-
-          // Voice alert context ke hisab se
-          const msg =
-            minDistance > 200
-              ? `Route joined. Nearest point is ${this.activeTarget().event}`
-              : `Navigation started at ${this.activeTarget().event}`;
-          this.announce(msg);
-
-          // Continuous tracking start karo
+          this.announce(`Locked on ${this.activeTarget().event}`);
           this.startTracking();
         },
-        (err) => {
-          console.warn('GPS timeout or denied, starting from first station.');
-          this.startTracking();
-        },
+        () => this.startTracking(),
         { enableHighAccuracy: true, timeout: 5000 },
       );
     } catch (e) {
       this.trackingStarted.set(false);
-      alert('Error: Route data fetch failed.');
+      alert('Failed to load route data from public/routes/');
     }
   }
 
   private startTracking() {
     if (this.watchId) navigator.geolocation.clearWatch(this.watchId);
-
     this.watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude, longitude, speed, accuracy } = pos.coords;
@@ -104,14 +109,11 @@ export class App {
     const dist = this.calculateMeters(uLat, uLng, target.latitude, target.longitude);
     this.distanceToTarget.set(dist);
 
-    // Auto-advance logic (100m range)
-    if (dist <= 100 && this.currentIndex < this.railwayData.length - 1) {
+    if (dist <= 150 && this.currentIndex < this.railwayData.length - 1) {
       this.lastPassed.set(this.railwayData[this.currentIndex]);
       this.currentIndex++;
       this.activeTarget.set(this.railwayData[this.currentIndex]);
-      this.announce(
-        `Arriving at ${this.lastPassed().event}. Next target ${this.activeTarget().event}`,
-      );
+      this.announce(`Approaching ${this.lastPassed().event}`);
     }
   }
 
@@ -119,11 +121,10 @@ export class App {
     if (this.isMuted() || !this.synth) return;
     this.synth.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    // Voice selection logic
     const voices = this.synth.getVoices();
     utter.voice =
       voices.find((v) => v.name.includes('Google') || v.name.includes('Samantha')) || voices[0];
-    utter.rate = 0.95;
+    utter.rate = 0.9;
     this.synth.speak(utter);
   }
 
@@ -141,7 +142,6 @@ export class App {
     if (this.watchId) navigator.geolocation.clearWatch(this.watchId);
     this.synth.cancel();
     this.trackingStarted.set(false);
-    this.lastPassed.set(null);
   }
 
   toggleMute() {

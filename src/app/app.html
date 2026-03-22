@@ -1,27 +1,28 @@
 <div class="app-container">
+
   @if (!trackingStarted()) {
   <div class="home-screen">
     <header>
       <h1>LOCO<span>NAV</span></h1>
-      <p>System Ready • Select Route</p>
+      <p>Operational Dashboard • Select Route</p>
     </header>
     <div class="grid">
       @for (f of availableRoutes; track f) {
       <button (click)="selectAndStart(f)">
-        <span class="btn-label">DATA-LINK</span>
+        <span class="btn-label">NAV-LINK</span>
         <span class="btn-name">{{ f.replace('.json', '') }}</span>
       </button>
       }
     </div>
   </div>
-  } @else {
-  <div class="hud">
+  }
+
+  @else {
+  <div class="hud" [class.blur-bg]="isSidebarOpen()">
     <header class="hud-top">
       <button class="icon-btn" (click)="stopNavigation()">←</button>
-      <div class="top-controls">
-        <button class="icon-btn" (click)="toggleMute()">
-          {{ isMuted() ? '🔇' : '🔊' }}
-        </button>
+      <div class="top-center">
+        <div class="clock">{{ currentTime() }}</div>
         <div class="gps-status" [class.weak]="gpsAccuracy() > 20">
           <span class="dot"></span>
           <span>GPS: {{ gpsAccuracy() | number:'1.0-0' }}m</span>
@@ -37,6 +38,7 @@
 
       <div class="speed-box">
         <span class="val">{{ currentSpeed() | number:'1.0-0' }}</span>
+        <div class="speed-divider"></div>
         <span class="unit">KM / H</span>
       </div>
 
@@ -56,6 +58,9 @@
     </main>
 
     <footer class="hud-bottom">
+      <button class="mute-btn" (click)="toggleMute()">
+        {{ isMuted() ? '🔇 MUTED' : '🔊 VOICE ON' }}
+      </button>
       <div class="track-line">
         <div class="progress"
           [style.width.%]="(100 - (distanceToTarget() / 10)) < 0 ? 0 : (100 - (distanceToTarget() / 10))"></div>
@@ -71,6 +76,7 @@
     <div class="side-list">
       @for (p of railwayData; track p.sr_no; let i = $index) {
       <div class="item" [class.on]="i === currentIndex">
+        <div class="status-dot"></div>
         <div class="info">
           <strong>{{ p.event }}</strong>
           <small>{{ p.station || 'Way-point' }}</small>
