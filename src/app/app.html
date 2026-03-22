@@ -1,5 +1,4 @@
 <div class="app-container">
-
   @if (!trackingStarted()) {
   <div class="home-screen">
     <header>
@@ -9,30 +8,31 @@
     <div class="grid">
       @for (f of availableRoutes; track f) {
       <button (click)="selectAndStart(f)">
-        <span class="btn-label">NAV-DATA</span>
+        <span class="btn-label">DATA-LINK</span>
         <span class="btn-name">{{ f.replace('.json', '') }}</span>
       </button>
       }
     </div>
   </div>
-  }
-
-  @else {
+  } @else {
   <div class="hud">
     <header class="hud-top">
       <button class="icon-btn" (click)="stopNavigation()">←</button>
-
-      <div class="gps-status" [class.weak]="gpsAccuracy() > 20">
-        <span class="dot"></span>
-        <span class="acc-val">GPS: {{ gpsAccuracy() | number:'1.0-0' }}m</span>
+      <div class="top-controls">
+        <button class="icon-btn" (click)="toggleMute()">
+          {{ isMuted() ? '🔇' : '🔊' }}
+        </button>
+        <div class="gps-status" [class.weak]="gpsAccuracy() > 20">
+          <span class="dot"></span>
+          <span>GPS: {{ gpsAccuracy() | number:'1.0-0' }}m</span>
+        </div>
       </div>
-
       <button class="icon-btn" (click)="toggleSidebar()">☰</button>
     </header>
 
     <main class="hud-center">
       <div class="passed-pill" [class.show]="lastPassed()">
-        {{ lastPassed()?.event }} • COMPLETED
+        {{ lastPassed()?.event }} PASSED
       </div>
 
       <div class="speed-box">
@@ -42,17 +42,23 @@
 
       <div class="target-box">
         <div class="distance">
+          @if (distanceToTarget() >= 1000) {
+          <span class="dist-val">{{ (distanceToTarget() / 1000) | number:'1.1-1' }}</span>
+          <span class="dist-unit">KM</span>
+          } @else {
           <span class="dist-val">{{ distanceToTarget() | number:'1.0-0' }}</span>
-          <span class="dist-unit">m</span>
+          <span class="dist-unit">M</span>
+          }
         </div>
         <div class="name">{{ activeTarget()?.event }}</div>
-        <div class="stn">{{ activeTarget()?.station }}</div>
+        <div class="stn">{{ activeTarget()?.station || 'Way-point' }}</div>
       </div>
     </main>
 
     <footer class="hud-bottom">
       <div class="track-line">
-        <div class="progress" [style.width.%]="(1 - (distanceToTarget()/1000)) * 100"></div>
+        <div class="progress"
+          [style.width.%]="(100 - (distanceToTarget() / 10)) < 0 ? 0 : (100 - (distanceToTarget() / 10))"></div>
       </div>
     </footer>
   </div>

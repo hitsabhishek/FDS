@@ -12,44 +12,34 @@
   width: 100vw;
   background: var(--bg);
   color: #fff;
-  font-family:
-    'Inter',
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: 'Inter', sans-serif;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-// HOME SCREEN POLISH
+// Home Screen Styles
 .home-screen {
   flex: 1;
   overflow-y: auto;
   padding: 50px 25px;
   background: radial-gradient(circle at top right, #0a1a0a 0%, #000 50%);
-
   header {
     text-align: center;
     margin-bottom: 50px;
     h1 {
       font-size: 3.5rem;
       font-weight: 900;
-      letter-spacing: -2px;
-      margin: 0;
       span {
         color: var(--green);
-        text-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
       }
     }
     p {
       color: var(--text-dim);
-      font-size: 0.9rem;
-      letter-spacing: 1px;
       text-transform: uppercase;
+      font-size: 0.8rem;
     }
   }
-
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -58,84 +48,64 @@
       background: var(--glass);
       border: 1px solid #222;
       color: #fff;
-      padding: 30px 15px;
+      padding: 30px 10px;
       border-radius: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: 0.2s;
-      &:active {
-        transform: scale(0.96);
-        background: rgba(0, 255, 65, 0.05);
-        border-color: var(--green);
-      }
       .btn-label {
         font-size: 0.6rem;
         color: var(--green);
-        font-weight: 800;
         margin-bottom: 5px;
-        opacity: 0.8;
       }
       .btn-name {
         font-weight: 700;
-        font-size: 1.1rem;
+        font-size: 1rem;
       }
     }
   }
 }
 
-// HUD POLISH
+// HUD HUD
 .hud {
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 20px;
-  box-sizing: border-box;
-
   .hud-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    .top-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
     .gps-status {
       background: var(--gray);
-      padding: 6px 14px;
+      padding: 6px 15px;
       border-radius: 30px;
+      border: 1px solid #222;
       font-size: 0.75rem;
-      font-weight: 700;
+      color: var(--green);
       display: flex;
       align-items: center;
       gap: 8px;
-      border: 1px solid #222;
-      color: var(--green);
       .dot {
-        width: 7px;
-        height: 7px;
+        width: 6px;
+        height: 6px;
         background: var(--green);
         border-radius: 50%;
         box-shadow: 0 0 10px var(--green);
       }
       &.weak {
         color: var(--red);
-        border-color: rgba(255, 62, 62, 0.2);
         .dot {
           background: var(--red);
           box-shadow: 0 0 10px var(--red);
         }
       }
-    }
-    .icon-btn {
-      background: var(--glass);
-      border: none;
-      color: #fff;
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid #222;
     }
   }
 
@@ -145,178 +115,168 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-
     .passed-pill {
-      font-size: 0.8rem;
-      font-weight: 700;
+      font-size: 0.75rem;
       color: var(--text-dim);
       background: var(--gray);
-      padding: 6px 18px;
-      border-radius: 50px;
-      margin-bottom: 20px;
+      padding: 6px 15px;
+      border-radius: 20px;
+      margin-bottom: 15px;
       opacity: 0;
-      transform: translateY(-10px);
-      transition: 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
       &.show {
         opacity: 1;
-        transform: translateY(0);
-        border: 1px solid #222;
       }
     }
-
     .speed-box {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
       .val {
-        font-size: 10rem;
+        font-size: clamp(6rem, 25vw, 10rem);
         font-weight: 950;
-        line-height: 0.75;
+        line-height: 0.8;
         letter-spacing: -5px;
-        font-variant-numeric: tabular-nums;
       }
       .unit {
         color: var(--text-dim);
-        font-size: 1.2rem;
-        font-weight: 800;
-        letter-spacing: 6px;
-        margin-top: 15px;
-        display: block;
+        font-size: 1.1rem;
+        letter-spacing: 5px;
         opacity: 0.5;
       }
     }
-
     .target-box {
       text-align: center;
       width: 100%;
-      padding: 0 10px; // Side gap taaki edge se touch na ho
-      box-sizing: border-box;
-
+      padding: 0 15px;
       .distance {
-        margin-bottom: 5px;
         display: flex;
         align-items: baseline;
         justify-content: center;
-
+        gap: 8px;
         .dist-val {
-          // Isse number bada hone par font size apne aap chota ho jayega
-          font-size: clamp(3rem, 18vw, 6rem);
+          font-size: clamp(3.5rem, 18vw, 6.5rem);
           font-weight: 950;
           color: var(--green);
           line-height: 0.9;
           letter-spacing: -3px;
-          text-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
-
-          // Animation taaki number change hote waqt jump na kare
-          transition: font-size 0.2s ease;
         }
-
         .dist-unit {
           font-size: 1.2rem;
           color: var(--text-dim);
           font-weight: 800;
-          margin-left: 8px;
-          text-transform: uppercase;
         }
       }
-
       .name {
-        // Station name ke liye bhi safety handle
-        font-size: clamp(1.5rem, 8vw, 2.6rem);
+        font-size: clamp(1.5rem, 7vw, 2.5rem);
         font-weight: 900;
         text-transform: uppercase;
+        margin-top: 10px;
         line-height: 1.1;
-        margin-bottom: 5px;
-        letter-spacing: -1px;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 2; // Agar naam bahut lamba hai toh 2 line mein wrap hoga
-        -webkit-box-orient: vertical;
       }
-
       .stn {
         font-size: 1.1rem;
         color: var(--text-dim);
-        font-weight: 500;
-        opacity: 0.8;
+        margin-top: 5px;
       }
     }
   }
 
-  .hud-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-    .track-line {
-      height: 8px;
-      background: #111;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 1px solid #1a1a1a;
-      .progress {
-        height: 100%;
-        background: linear-gradient(90deg, #008f25, var(--green));
-        box-shadow: 0 0 20px var(--green);
-        transition: width 0.4s ease;
-      }
+  .hud-bottom .track-line {
+    height: 6px;
+    background: #111;
+    border-radius: 10px;
+    overflow: hidden;
+    .progress {
+      height: 100%;
+      background: var(--green);
+      box-shadow: 0 0 15px var(--green);
+      transition: 0.4s;
     }
   }
 }
 
-// SIDEBAR POLISH
+.icon-btn {
+  background: var(--glass);
+  border: 1px solid #222;
+  color: #fff;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+// Sidebar
 .sidebar {
   position: fixed;
   top: 0;
   right: -100%;
   width: 85%;
   height: 100%;
-  background: rgba(5, 5, 5, 0.95);
-  backdrop-filter: blur(20px);
+  background: #050505;
+  border-left: 1px solid #111;
   transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-  z-index: 100;
+  z-index: 999;
   &.open {
     right: 0;
-    box-shadow: -20px 0 60px #000;
+    box-shadow: -20px 0 50px #000;
   }
   .side-head {
-    padding: 30px;
+    padding: 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #111;
-    h3 {
-      margin: 0;
-      letter-spacing: 2px;
-      font-size: 1rem;
-      color: var(--text-dim);
-    }
   }
   .side-list {
     padding: 15px;
-    height: calc(100% - 100px);
+    height: 85%;
     overflow-y: auto;
     .item {
-      padding: 20px;
-      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 10px;
       opacity: 0.2;
-      margin-bottom: 8px;
-      border: 1px solid transparent;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      .info {
-        strong {
-          font-size: 1.2rem;
-          display: block;
-        }
-        small {
-          color: var(--text-dim);
-          font-size: 0.85rem;
-        }
-      }
       &.on {
         opacity: 1;
         color: var(--green);
         background: rgba(0, 255, 65, 0.05);
-        border-color: rgba(0, 255, 65, 0.1);
+        border-radius: 15px;
+        border: 1px solid #111;
+      }
+      strong {
+        display: block;
+        font-size: 1.1rem;
       }
     }
   }
 }
+
+// ... (Saare pichle variables aur container styles)
+
+.hud-center {
+  .passed-pill {
+    transition: all 0.5s ease;
+    transform: translateY(10px);
+    &.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .target-box {
+    .distance {
+      .dist-val {
+        // High visibility for green numbers
+        text-shadow: 0 0 25px rgba(0, 255, 65, 0.4);
+      }
+    }
+  }
+}
+
+.progress {
+  // Smooth transition for the bar
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// ... (Baki sidebar aur layout styles jo aapne upar likhe hain)
