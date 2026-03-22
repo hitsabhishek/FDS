@@ -1,55 +1,77 @@
-<div class="loco-container">
-  <button class="icon-btn mute" (click)="toggleMute()">
-    {{ isMuted() ? '🔇' : '🔊' }}
-  </button>
+<div class="app-container">
 
   @if (!trackingStarted()) {
-    <div class="launch-screen">
-      <div class="glass-card">
-        <h1>LOCO<span>NAV</span></h1>
-        <div class="btn-grid">
-          @for (file of availableRoutes; track file) {
-            <button (click)="selectAndStart(file)"><i>🛤️</i> {{ file.toUpperCase() }}</button>
-          }
-        </div>
-      </div>
+  <div class="home-screen">
+    <header>
+      <h1>LOCO<span>NAV</span></h1>
+      <p>System Ready • Select Route</p>
+    </header>
+    <div class="grid">
+      @for (f of availableRoutes; track f) {
+      <button (click)="selectAndStart(f)">
+        <span class="btn-label">NAV-DATA</span>
+        <span class="btn-name">{{ f.replace('.json', '') }}</span>
+      </button>
+      }
     </div>
+  </div>
   }
 
-  <div id="map" class="full-map"></div>
+  @else {
+  <div class="hud">
+    <header class="hud-top">
+      <button class="icon-btn" (click)="stopNavigation()">←</button>
 
-  <div class="speedometer">
-    <div class="val">{{ currentSpeed() | number:'1.0-0' }}</div>
-    <div class="lab">KM/H</div>
-  </div>
+      <div class="gps-status" [class.weak]="gpsAccuracy() > 20">
+        <span class="dot"></span>
+        <span class="acc-val">GPS: {{ gpsAccuracy() | number:'1.0-0' }}m</span>
+      </div>
 
-  <div class="nav-hud" [class.danger]="distanceToTarget() > 300">
-    <div class="target-info">
-      <p>UPCOMING</p>
-      <h3>{{ nextTarget()?.Event || '...' }}</h3>
-      <span class="badge">{{ nextTarget()?.Station || '---' }}</span>
-    </div>
-    <div class="target-dist">
-      <div class="km">{{ distanceToTarget() | number:'1.0-0' }}</div>
-      <div class="unit">METERS</div>
-    </div>
-  </div>
+      <button class="icon-btn" (click)="toggleSidebar()">☰</button>
+    </header>
 
-  <div class="timeline">
-    @for (p of railwayData; track p['Sr. No.']; let i = $index) {
-      <div class="node" [id]="'point-' + p['Sr. No.']" 
-           [class.active]="i === currentIndex" 
-           [class.passed]="i < currentIndex" 
-           [class.upcoming]="i > currentIndex">
-        <div class="line-box">
-          <div class="dot">@if(i < currentIndex){✓}</div>
-          <div class="line"></div>
+    <main class="hud-center">
+      <div class="passed-pill" [class.show]="lastPassed()">
+        {{ lastPassed()?.event }} • COMPLETED
+      </div>
+
+      <div class="speed-box">
+        <span class="val">{{ currentSpeed() | number:'1.0-0' }}</span>
+        <span class="unit">KM / H</span>
+      </div>
+
+      <div class="target-box">
+        <div class="distance">
+          <span class="dist-val">{{ distanceToTarget() | number:'1.0-0' }}</span>
+          <span class="dist-unit">m</span>
         </div>
-        <div class="text">
-          <b>{{ p.Station }}</b>
-          <small>{{ p.Event }}</small>
+        <div class="name">{{ activeTarget()?.event }}</div>
+        <div class="stn">{{ activeTarget()?.station }}</div>
+      </div>
+    </main>
+
+    <footer class="hud-bottom">
+      <div class="track-line">
+        <div class="progress" [style.width.%]="(1 - (distanceToTarget()/1000)) * 100"></div>
+      </div>
+    </footer>
+  </div>
+
+  <div class="sidebar" [class.open]="isSidebarOpen()">
+    <div class="side-head">
+      <h3>FLIGHT PLAN</h3>
+      <button class="icon-btn" (click)="toggleSidebar()">✕</button>
+    </div>
+    <div class="side-list">
+      @for (p of railwayData; track p.sr_no; let i = $index) {
+      <div class="item" [class.on]="i === currentIndex">
+        <div class="info">
+          <strong>{{ p.event }}</strong>
+          <small>{{ p.station || 'Way-point' }}</small>
         </div>
       </div>
-    }
+      }
+    </div>
   </div>
+  }
 </div>
