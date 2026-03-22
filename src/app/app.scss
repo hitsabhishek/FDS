@@ -188,35 +188,56 @@
     .target-box {
       text-align: center;
       width: 100%;
+      padding: 0 10px; // Side gap taaki edge se touch na ho
+      box-sizing: border-box;
+
       .distance {
         margin-bottom: 5px;
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+
         .dist-val {
-          font-size: 5.5rem;
-          font-weight: 900;
+          // Isse number bada hone par font size apne aap chota ho jayega
+          font-size: clamp(3rem, 18vw, 6rem);
+          font-weight: 950;
           color: var(--green);
-          line-height: 1;
-          letter-spacing: -2px;
+          line-height: 0.9;
+          letter-spacing: -3px;
           text-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
+
+          // Animation taaki number change hote waqt jump na kare
+          transition: font-size 0.2s ease;
         }
+
         .dist-unit {
-          font-size: 1.4rem;
+          font-size: 1.2rem;
           color: var(--text-dim);
-          font-weight: 700;
-          margin-left: 5px;
+          font-weight: 800;
+          margin-left: 8px;
+          text-transform: uppercase;
         }
       }
+
       .name {
-        font-size: 2.6rem;
+        // Station name ke liye bhi safety handle
+        font-size: clamp(1.5rem, 8vw, 2.6rem);
         font-weight: 900;
         text-transform: uppercase;
-        line-height: 1;
+        line-height: 1.1;
         margin-bottom: 5px;
         letter-spacing: -1px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2; // Agar naam bahut lamba hai toh 2 line mein wrap hoga
+        -webkit-box-orient: vertical;
       }
+
       .stn {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         color: var(--text-dim);
         font-weight: 500;
+        opacity: 0.8;
       }
     }
   }
