@@ -23,6 +23,7 @@ export class App implements OnInit, OnDestroy {
   public isSidebarOpen = signal<boolean>(false);
 
   public currentIndex = 0;
+  private alertDone = false; // 500m alert track karne ke liye
   private watchId: number | null = null;
   private clockInterval: any;
   private synth = window.speechSynthesis;
@@ -30,6 +31,13 @@ export class App implements OnInit, OnDestroy {
   ngOnInit() {
     this.updateTime();
     this.clockInterval = setInterval(() => this.updateTime(), 1000);
+
+    // Chrome/Android Voice Load Fix
+    if (this.synth) {
+      this.synth.onvoiceschanged = () => {
+        console.log('Voices Loaded:', this.synth.getVoices().length);
+      };
+    }
   }
 
   ngOnDestroy() {
@@ -51,7 +59,7 @@ export class App implements OnInit, OnDestroy {
 
   async selectAndStart(fileName: string) {
     try {
-      this.isSidebarOpen.set(false); // Close sidebar if switching routes
+      this.isSidebarOpen.set(false);
       this.trackingStarted.set(true);
 
       const res = await fetch(`./routes/${fileName}`);
@@ -59,6 +67,7 @@ export class App implements OnInit, OnDestroy {
       this.railwayData = await res.json();
 
       this.currentIndex = 0;
+      this.alertDone = false; // Flag reset for new route
       this.activeTarget.set(this.railwayData[0]);
 
       navigator.geolocation.getCurrentPosition(
@@ -77,6 +86,7 @@ export class App implements OnInit, OnDestroy {
 
           this.currentIndex = nearestIdx;
           this.activeTarget.set(this.railwayData[this.currentIndex]);
+          this.alertDone = false; 
           this.announce(`Locked on ${this.activeTarget().event}`);
           this.startTracking();
         },
@@ -85,7 +95,7 @@ export class App implements OnInit, OnDestroy {
       );
     } catch (e) {
       this.trackingStarted.set(false);
-      alert('Failed to load route data from public/routes/');
+      alert('Failed to load route data');
     }
   }
 
@@ -105,26 +115,53 @@ export class App implements OnInit, OnDestroy {
 
   private processNavigation(uLat: number, uLng: number) {
     if (!this.railwayData.length) return;
+    
     const target = this.railwayData[this.currentIndex];
     const dist = this.calculateMeters(uLat, uLng, target.latitude, target.longitude);
     this.distanceToTarget.set(dist);
 
-    if (dist <= 150 && this.currentIndex < this.railwayData.length - 1) {
+    // --- 1. CALL OUT LOGIC (500 Meters Alert) ---
+    if (dist <= 500 && dist > 15 && !this.alertDone) {
+      this.announce(`Approaching ${target.event}. Five hundred meters remaining.`);
+      this.alertDone = true; 
+    }
+
+    // --- 2. PASSING LOGIC (05 Meters Precision) ---
+    if (dist <= 5 && this.currentIndex < this.railwayData.length - 1) {
       this.lastPassed.set(this.railwayData[this.currentIndex]);
+      
+      // Confirmation Voice
+      this.announce(`${this.lastPassed().event} passed.`);
+      
       this.currentIndex++;
       this.activeTarget.set(this.railwayData[this.currentIndex]);
-      this.announce(`Approaching ${this.lastPassed().event}`);
+      this.alertDone = false; // Reset alert for the next upcoming station
+
+      // Sidebar Auto-scroll to active item
+      setTimeout(() => {
+        const activeItem = document.querySelector('.item.on');
+        activeItem?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     }
   }
 
   private announce(text: string) {
     if (this.isMuted() || !this.synth) return;
+    
     this.synth.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     const voices = this.synth.getVoices();
-    utter.voice =
-      voices.find((v) => v.name.includes('Google') || v.name.includes('Samantha')) || voices[0];
-    utter.rate = 0.9;
+
+    // Natural Voice Selection
+    let selectedVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('en'));
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.name.includes('Samantha') || v.name.includes('Microsoft Ravi'));
+    }
+
+    if (selectedVoice) utter.voice = selectedVoice;
+    
+    utter.rate = 0.85; // Natural human speed
+    utter.pitch = 1.0;
     this.synth.speak(utter);
   }
 
@@ -144,10 +181,6 @@ export class App implements OnInit, OnDestroy {
     this.trackingStarted.set(false);
   }
 
-  toggleMute() {
-    this.isMuted.set(!this.isMuted());
-  }
-  toggleSidebar() {
-    this.isSidebarOpen.set(!this.isSidebarOpen());
-  }
+  toggleMute() { this.isMuted.set(!this.isMuted()); }
+  toggleSidebar() { this.isSidebarOpen.set(!this.isSidebarOpen()); }
 }

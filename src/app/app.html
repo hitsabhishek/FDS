@@ -48,7 +48,9 @@
           <span class="dist-val">{{ (distanceToTarget() / 1000) | number:'1.1-1' }}</span>
           <span class="dist-unit">KM</span>
           } @else {
-          <span class="dist-val">{{ distanceToTarget() | number:'1.0-0' }}</span>
+          <span class="dist-val" [class.danger]="distanceToTarget() < 100">
+            {{ distanceToTarget() | number:'1.0-0' }}
+          </span>
           <span class="dist-unit">M</span>
           }
         </div>
@@ -63,7 +65,7 @@
       </button>
       <div class="track-line">
         <div class="progress"
-          [style.width.%]="(100 - (distanceToTarget() / 10)) < 0 ? 0 : (100 - (distanceToTarget() / 10))"></div>
+          [style.width.%]="(100 - (distanceToTarget() / 5)) < 0 ? 0 : (100 - (distanceToTarget() / 5))"></div>
       </div>
     </footer>
   </div>
