@@ -1,5 +1,5 @@
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -109,7 +109,7 @@ export class App implements OnInit, OnDestroy {
     const dist = this.calculateMeters(uLat, uLng, target.latitude, target.longitude);
     this.distanceToTarget.set(dist);
 
-    if (dist <= 5 && this.currentIndex < this.railwayData.length - 1) {
+    if (dist <= 150 && this.currentIndex < this.railwayData.length - 1) {
       this.lastPassed.set(this.railwayData[this.currentIndex]);
       this.currentIndex++;
       this.activeTarget.set(this.railwayData[this.currentIndex]);
